@@ -119,6 +119,16 @@
             color: #991b1b;
         }
 
+        .calendario-cabecera { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:15px; }
+        .calendario-cabecera button { padding:8px 14px; border:0; border-radius:6px; background:#2563eb; color:white; cursor:pointer; }
+        .calendario { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+        .dia-semana, .dia-calendario { padding:10px 5px; text-align:center; border-radius:6px; }
+        .dia-semana { font-weight:bold; color:#475569; }
+        .dia-calendario { min-height:75px; background:#f8fafc; border:1px solid #e2e8f0; }
+        .dia-calendario.hoy { border:2px solid #2563eb; }
+        .dia-calendario.vacio { background:white; border:0; }
+        .evento-calendario { display:block; margin-top:4px; padding:3px; border-radius:4px; background:#dbeafe; color:#1d4ed8; font-size:11px; overflow-wrap:anywhere; }
+
         .lista-eventos {
             display: flex;
             flex-direction: column;
@@ -295,6 +305,16 @@
         </div>
 
         <div class="tarjeta">
+            <h2>Calendario mensual</h2>
+            <div class="calendario-cabecera">
+                <button type="button" id="mes-anterior">Anterior</button>
+                <h3 id="mes-actual"></h3>
+                <button type="button" id="mes-siguiente">Siguiente</button>
+            </div>
+            <div class="calendario" id="calendario"></div>
+        </div>
+
+        <div class="tarjeta">
             <h2>Eventos programados</h2>
             <button type="button" class="boton-registrar" id="activar-recordatorios" style="margin-bottom:15px;">Activar notificaciones de recordatorio</button>
             <p id="estado-recordatorios" style="margin-bottom:15px;color:#64748b;"></p>
@@ -361,7 +381,61 @@
         </div>
     </div>
 <script>
-    const scheduledEvents = @json($reminderEvents)
+    const scheduledEvents = @json($reminderEvents);
+    const calendar = document.getElementById('calendario');
+    const monthTitle = document.getElementById('mes-actual');
+    let currentMonth = new Date();
+    currentMonth.setDate(1);
+
+    //Muestra los eventos dentro del calendario mensual
+    function showCalendar() {
+        const year = currentMonth.getFullYear();
+        const month = currentMonth.getMonth();
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+        monthTitle.textContent = monthNames[month] + ' ' + year;
+        calendar.innerHTML = '';
+        ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].forEach(function (day) {
+            const heading = document.createElement('div');
+            heading.className = 'dia-semana';
+            heading.textContent = day;
+            calendar.appendChild(heading);
+        });
+        for (let i = 0; i < firstDay; i++) {
+            const empty = document.createElement('div');
+            empty.className = 'dia-calendario vacio';
+            calendar.appendChild(empty);
+        }
+        for (let day = 1; day <= daysInMonth; day++) {
+            const cell = document.createElement('div');
+            const dateText = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+            cell.className = 'dia-calendario';
+            const today = new Date();
+            const todayText = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+            if (dateText === todayText) cell.classList.add('hoy');
+            const number = document.createElement('strong');
+            number.textContent = day;
+            cell.appendChild(number);
+            scheduledEvents.filter(function (event) { return event.date === dateText; }).forEach(function (event) {
+                const label = document.createElement('span');
+                label.className = 'evento-calendario';
+                label.textContent = event.title + ' ' + event.time;
+                cell.appendChild(label);
+            });
+            calendar.appendChild(cell);
+        }
+    }
+
+    document.getElementById('mes-anterior').addEventListener('click', function () {
+        currentMonth.setMonth(currentMonth.getMonth() - 1);
+        showCalendar();
+    });
+    document.getElementById('mes-siguiente').addEventListener('click', function () {
+        currentMonth.setMonth(currentMonth.getMonth() + 1);
+        showCalendar();
+    });
+    showCalendar();
 
     document.getElementById('activar-recordatorios').addEventListener('click', async function () {
         const status = document.getElementById('estado-recordatorios');

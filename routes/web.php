@@ -37,6 +37,7 @@ Route::delete('/expenses/{expense}', [ExpenseController::class, 'destroy'])->nam
 // RUTAS EJERCICIO 5: SISTEMA DE RESERVAS
 Route::get('/reservations', [ReservationController::class, 'index'])->name('reservations.index');
 Route::post('/reservations', [ReservationController::class, 'store'])->name('reservations.store');
+Route::put('/reservations/{reservation}/confirm', [ReservationController::class, 'confirm'])->name('reservations.confirm');
 Route::delete('/reservations/{reservation}', [ReservationController::class, 'destroy'])->name('reservations.destroy');
 
 // RUTAS EJERCICIO 6: GESTOR DE NOTAS

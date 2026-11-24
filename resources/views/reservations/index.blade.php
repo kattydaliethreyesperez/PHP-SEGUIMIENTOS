@@ -239,14 +239,18 @@
                 <div class="campo">
                     <label for="reservation_date">Fecha de la reserva</label>
                     <input type="date" id="reservation_date" name="reservation_date"
-                        value="{{ old('reservation_date') }}"
+                        value="{{ old('reservation_date', $selectedDate) }}"
                         min="{{ date('Y-m-d') }}" required>
                 </div>
 
                 <div class="campo">
                     <label for="reservation_time">Hora de la reserva</label>
-                    <input type="time" id="reservation_time" name="reservation_time"
-                        value="{{ old('reservation_time') }}" required>
+                    <select id="reservation_time" name="reservation_time" required>
+                        <option value="">Selecciona un horario disponible</option>
+                        @foreach ($availableTimes as $time)
+                            <option value="{{ $time }}" {{ old('reservation_time') == $time ? 'selected' : '' }}>{{ $time }}</option>
+                        @endforeach
+                    </select>
                 </div>
 
                 <div class="campo campo-completo">
@@ -269,6 +273,24 @@
         </div>
 
         <div class="tarjeta">
+            <h2>Disponibilidad de horarios</h2>
+            <form action="{{ route('reservations.index') }}" method="GET" class="formulario">
+                <div class="campo">
+                    <label for="date">Consultar fecha</label>
+                    <input type="date" id="date" name="date" value="{{ $selectedDate }}" min="{{ date('Y-m-d') }}" required>
+                </div>
+                <button type="submit" class="boton-registrar">Consultar disponibilidad</button>
+            </form>
+            <p style="margin-top:15px;">
+                @if (count($availableTimes) > 0)
+                    Horarios disponibles para {{ date('d/m/Y', strtotime($selectedDate)) }}: {{ implode(', ', $availableTimes) }}
+                @else
+                    No hay horarios disponibles para esta fecha.
+                @endif
+            </p>
+        </div>
+
+        <div class="tarjeta">
             <h2>Reservas registradas</h2>
 
             @if ($reservations->count() > 0)
@@ -284,6 +306,7 @@
                                 <th>Hora</th>
                                 <th>Personas</th>
                                 <th>Observaciones</th>
+                                <th>Estado</th>
                                 <th>Accion</th>
                             </tr>
                         </thead>
@@ -298,9 +321,17 @@
                                     <td>{{ substr($reservation->reservation_time, 0, 5) }}</td>
                                     <td>{{ $reservation->guests }}</td>
                                     <td>{{ $reservation->notes ?: 'Sin observaciones' }}</td>
+                                    <td>{{ $reservation->status == 'confirmed' ? 'Confirmada' : 'Pendiente' }}</td>
 
                                     {{--Formulario para eliminar la reserva seleccionada--}}
                                     <td>
+                                        @if ($reservation->status == 'pending')
+                                            <form action="{{ route('reservations.confirm', $reservation) }}" method="POST" style="margin-bottom:8px;">
+                                                @csrf
+                                                @method('PUT')
+                                                <button type="submit" class="boton-registrar" style="padding:8px 12px;">Confirmar</button>
+                                            </form>
+                                        @endif
                                         <form action="{{ route('reservations.destroy', $reservation) }}"
                                             method="POST"
                                             onsubmit="return confirm('¿Estas seguro de eliminar esta reserva?')">

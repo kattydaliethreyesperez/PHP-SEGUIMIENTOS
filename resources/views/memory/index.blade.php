@@ -83,6 +83,8 @@
             cursor: default;
         }
 
+        .carta img { width:100%; height:100%; object-fit:cover; border-radius:8px; }
+
         .carta.acertada {
             background-color: #dcfce7;
             border-color: #16a34a;
@@ -160,7 +162,7 @@
 <body>
     <div class="contenedor">
         <h1>Juego de memoria</h1>
-        <p class="descripcion">Encuentra las ocho parejas de numeros iguales. Cada pareja suma 10 puntos.</p>
+        <p class="descripcion">Encuentra las parejas de imagenes iguales. Cada pareja suma 10 puntos.</p>
 
         <div class="panel">
             <div class="dato">Dificultad<strong><select id="difficulty"><option value="easy">Facil</option><option value="medium" selected>Media</option><option value="hard">Dificil</option></select></strong></div>
@@ -275,7 +277,7 @@
             startTimer();
 
             this.classList.add('revelada');
-            this.textContent = this.dataset.number;
+            this.innerHTML = '<img src="' + this.dataset.image + '" alt="Imagen de la carta">';
 
             if (!firstCard) {
                 firstCard = this;
@@ -314,8 +316,8 @@
             setTimeout(function () {
                 firstCard.classList.remove('revelada');
                 secondCard.classList.remove('revelada');
-                firstCard.textContent = '?';
-                secondCard.textContent = '?';
+                firstCard.innerHTML = '?';
+                secondCard.innerHTML = '?';
                 resetTurn();
             }, 900);
         }
@@ -356,6 +358,7 @@
                 card.className = 'carta';
                 card.textContent = '?';
                 card.dataset.number = number;
+                card.dataset.image = 'https://loremflickr.com/300/300/animal?lock=' + number;
                 card.setAttribute('aria-label', 'Carta oculta');
                 card.addEventListener('click', flipCard);
                 board.appendChild(card);

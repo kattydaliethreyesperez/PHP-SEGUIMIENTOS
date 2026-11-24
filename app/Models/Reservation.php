@@ -13,7 +13,8 @@ class Reservation extends Model
         'reservation_date',
         'reservation_time',
         'guests',
-        'notes'
+        'notes',
+        'status'
     ];
 
     //Define los tipos de datos que utiliza el modelo

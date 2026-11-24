@@ -11,7 +11,14 @@ class ReservationController extends Controller
     public function index()
     {
         $reservations = Reservation::orderBy('reservation_date', 'asc')->orderBy('reservation_time', 'asc')->get();
-        return view('reservations.index', compact('reservations'));
+        $selectedDate = request('date', date('Y-m-d'));
+        $occupiedTimes = Reservation::whereDate('reservation_date', $selectedDate)->where('status', '!=', 'cancelled')->pluck('reservation_time')->map(function ($time) { return substr($time, 0, 5); })->toArray();
+        $availableTimes = [];
+        for ($hour = 9; $hour <= 17; $hour++) {
+            $time = sprintf('%02d:00', $hour);
+            if (!in_array($time, $occupiedTimes)) $availableTimes[] = $time;
+        }
+        return view('reservations.index', compact('reservations', 'selectedDate', 'availableTimes'));
     }
 
     //Valida y registra una nueva reserva
@@ -39,6 +46,7 @@ class ReservationController extends Controller
         //Comprueba que el horario no este ocupado
         $occupied = Reservation::whereDate('reservation_date', $validated['reservation_date'])
             ->whereTime('reservation_time', $validated['reservation_time'])
+            ->where('status', '!=', 'cancelled')
             ->exists();
 
         if ($occupied) {
@@ -46,9 +54,17 @@ class ReservationController extends Controller
         }
 
         //Guarda la reserva utilizando los datos validados
+        $validated['status'] = 'pending';
         Reservation::create($validated);
 
         return redirect()->route('reservations.index')->with('success', 'Reserva registrada correctamente.');
+    }
+
+    //Confirma una reserva registrada
+    public function confirm(Reservation $reservation)
+    {
+        $reservation->update(['status' => 'confirmed']);
+        return redirect()->route('reservations.index')->with('success', 'Reserva confirmada correctamente.');
     }
 
     //Elimina una reserva ya existente
